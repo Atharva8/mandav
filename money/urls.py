@@ -15,9 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from home.tasks import notify_user
+
 urlpatterns = [
     path('', admin.site.urls),
 ]
 
-notify_user(repeat=2)
