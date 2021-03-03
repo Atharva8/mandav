@@ -16,13 +16,13 @@
         <th>Pay</th>
     </thead>
     <tbody>
-        {%for order_id, gst, cst , item_total in details%}
+        {%for order_id, gst, cst , item_total, gst_status in details%}
         <tr>
             <td><a href="/home/paymentsummary/yo/{{order_id}}">{{order_id}}</a></td>
             <td>{{item_total | intcomma}}</td>
             <td>{{gst | intcomma}}</td>
             <td>{{cst | intcomma}}</td>
-            <td> <input type="checkbox" name="_selected_action" value={{order_id}} class="action-select"> </td> 
+            <td> {%if gst_status == "Unpaid"%}<input type="checkbox" name="_selected_action" value={{order_id}} class="action-select"> {%else%}{{gst_status}}{%endif%}</td> 
         </tr>
         {%endfor%}
         <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">

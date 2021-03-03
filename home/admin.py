@@ -81,13 +81,15 @@ class TaxSummaryAdmin(admin.ModelAdmin):
         cst = []
         order_id = []
         item_total = []
+        gst_status = []
         for q in qs:
             gst.append(q.gst)
             cst.append(q.cst)
             order_id.append(q.id)
             item_total.append(q.total)
+            gst_status.append(q.gst_status)
 
-        response.context_data['details'] = zip(order_id, gst, cst, item_total)
+        response.context_data['details'] = zip(order_id, gst, cst, item_total,gst_status)
         response.context_data['gst_total'] = total_gst
         response.context_data['cst_total'] = total_cst
         return response

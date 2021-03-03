@@ -175,7 +175,7 @@ class Payment(models.Model):
     cheque_no = models.CharField(max_length=100, blank=True)
 
     def clean(self, *args, **kwargs):
-        if self.paid > self.remaining:
+        if self.amount > self.remaining:
             raise ValidationError(
                 ('Amount entered is greater than remaining'), code='amount invalid')
         super(Payment, self).clean(*args, **kwargs)
@@ -186,7 +186,7 @@ class Payment(models.Model):
 
     @property
     def remaining(self):
-        return self.order.grand_total - self.paid
+        return abs(self.order.grand_total - self.paid)
 
     @property
     def gst(self):
