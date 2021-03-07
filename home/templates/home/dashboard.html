@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+    crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+</head>
+
+<body>
+
+  <div class="container ">
+
+    <div class="row">
+      <nav class="navbar  navbar-dark bg-dark  ">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">Dashboard</a>
+        </div>
+      </nav>
+    </div>
+    <h1>Stats:</h1>
+    <div class="row">
+      <div class="col-sm-3 ">
+        <div class="card text-center">
+          <h5 class="card-header">Total Customers</h5>
+          <div class="card-body">
+
+            <a href="{%url "admin:home_customer_changelist"%}" class="btn btn-primary w-100">{{total_customers}}</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-2">
+        <div class="card text-center">
+          <h5 class="card-header">Total Orders</h5>
+          <div class="card-body">
+
+            <a href="{%url "admin:home_order_changelist"%}" class="btn btn-primary w-100">{{total_orders}}</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3 ">
+        <div class="card text-center">
+          <h5 class="card-header">Today's Orders</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">{{todays_orders}}</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="card text-center">
+          <h5 class="card-header">Upcoming Orders</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">{{upcoming_orders}}</a>
+          </div>
+        </div>
+      </div>
+      
+    </div><br>
+    <div class="row">
+      <div class="col-sm-3 text-center">
+        <div class="card">
+          <h5 class="card-header">Pending GST</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">₹{{gst_unpaid}}</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="card text-center">
+          <h5 class="card-header">Pending CST</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">₹{{cst_unpaid}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-5">
+        <table class="table border rounded">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Item</th>
+              <th scope="col">Rented</th>
+              <th scope="col">Available</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%for item in inventory%}
+            <tr>
+              <th scope="row">{{forloop.counter}}</th>
+              <td>{{item.name}}</td>
+              <td>{{item.rented}}</td>
+              <td>{{item.available}}</td>
+            </tr>
+            {%endfor%}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <canvas id="myChart"></canvas>
+  </div>
+  
+  <script>
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var order_month = [];
+    {%for order_count in orders_month_count%}
+      order_month[{{forloop.counter0}}] = {{order_count}};
+    {%endfor%}
+    console.log(order_month);
+var chart = new Chart(ctx, {
+    // The type of chart we want to create
+    type: 'line',
+
+    // The data for our dataset
+    data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July','August','September','October','September'],
+        datasets: [{
+            label: 'Orders',
+            backgroundColor: 'rgb(255, 255, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: order_month
+        }]
+    },
+
+    // Configuration options go here
+    options: {}
+});
+  </script>
+</body>
+
+</html>

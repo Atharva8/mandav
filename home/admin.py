@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django.http import response
-from .models import Customer, Order, Item, ItemInst, Payment, PaymentDetail, TaxSummary, PaymentSummary, Inventory
+from .models import Customer, Feedback, Order, Item, ItemInst, Payment, PaymentDetail, TaxSummary, PaymentSummary, Inventory
 from rangefilter.filter import DateRangeFilter
 from django.urls import path
 from django.contrib.auth.models import Group, User
@@ -130,7 +130,12 @@ class InventoryAdmin(admin.ModelAdmin):
     readonly_fields = ('rented','available',)
 
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('name','price','gst','cst')
+    fields = ('name','price','gst','cst','image')
+
+class FeedbackAdmin(admin.ModelAdmin):
+    readonly_fields = ('name','email','comment')
+
+admin.site.register(Feedback,FeedbackAdmin)
 admin.site.register(TaxSummary, TaxSummaryAdmin)
 admin.site.register(Customer)
 admin.site.register(Order, OrderAdmin)

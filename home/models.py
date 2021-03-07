@@ -13,7 +13,8 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
-
+import os
+from django.conf import settings
 
 class Item(models.Model):
     name = models.CharField(max_length=30)
@@ -22,7 +23,7 @@ class Item(models.Model):
     gst = models.PositiveIntegerField(verbose_name='GST(%)')
     stock = models.PositiveIntegerField(default=0)
     rented = models.PositiveIntegerField(default=0)
-
+    image = models.ImageField(upload_to='images/',blank=True)
 
     @property
     def available(self):
@@ -92,18 +93,7 @@ class Order(models.Model):
             g_total += i.total
         return g_total
 
-    # def clean(self):
-    #     if self.from_date < datetime.date.today():
-    #         raise ValidationError(
-    #             ('From Date less than Today'), code='invalid_from_date')
-
-    #     if self.till_date < datetime.date.today():
-    #         raise ValidationError(
-    #             ('Till Date less than Today'), code='invalid_till_date')
-
-    #     if self.till_date < self.from_date:
-    #         raise ValidationError(
-    #             ('Till Date less than From Date'), code='tilldate_less_than_fromdate')        
+    
 
     def __str__(self):
         return str(self.customer)
@@ -199,11 +189,11 @@ class Payment(models.Model):
     @property
     def status(self):
         if self.paid - self.order.grand_total == 0.0:
-            return 'COMPLETED'
+            return 'Completed'
         elif self.paid == 0.0:
             return 'Unpaid'
         else:
-            return 'PENDING'
+            return 'Pending'
 
     @property
     def order_status(self):
@@ -219,7 +209,12 @@ class Payment(models.Model):
     def __str__(self):
         return f'Order ID: {self.order.id}'
 
-
+class Feedback(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.CharField(max_length=100)
+    comment = models.TextField()
+    def __str__(self):
+        return self.name
 class PaymentDetail(models.Model):
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     method = models.CharField(max_length=100, default='Cash')
@@ -274,7 +269,7 @@ def set_paid_zero(sender, instance, **kwargs):
                     payment=instance, method=instance.method, amount=instance.amount, cheque_no=instance.cheque_no)
                 details.save()
 
-                if instance.status == 'COMPLETED':
+                if instance.status == 'Completed':
                     order = Order.objects.get(id=instance.order.id)
                     order.payment_status = 'Complete'
                     order.save()

@@ -18,7 +18,7 @@
     <tbody>
         {%for order_id, gst, cst , item_total, gst_status in details%}
         <tr>
-            <td><a href="/home/paymentsummary/yo/{{order_id}}">{{order_id}}</a></td>
+            <td><a href="/admin/home/paymentsummary/yo/{{order_id}}">{{order_id}}</a></td>
             <td>{{item_total | intcomma}}</td>
             <td>{{gst | intcomma}}</td>
             <td>{{cst | intcomma}}</td>
@@ -28,8 +28,8 @@
         <tr style="font-weight:bold; border-top:2px solid #DDDDDD;">
             <td>Total(&#8377)</td>
             <td></td>
-            <td>{{gst_total | intcomma}}</td>
-            <td>{{cst_total | intcomma}}</td>
+            <td>₹{{gst_total |floatformat}}</td>
+            <td>₹{{cst_total |floatformat}}</td>
         </tr>
         
     </tbody>
