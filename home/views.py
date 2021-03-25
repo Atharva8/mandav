@@ -15,7 +15,10 @@ def index(request):
         feedback.save()    
 
     feedbacks = list(Feedback.objects.all())
-    random_items = random.sample(feedbacks, 3)
+    try:
+        random_items = random.sample(feedbacks, 3)
+    except:
+        random_items = []
     print(random_items)
     items = Item.objects.all()
     return render(request,'home/index.html',context={'items':items,'feedbacks':random_items})
@@ -32,7 +35,16 @@ def dashboard(request):
             if payment.order.gst_status == 'Unpaid':
                 gst_unpaid+=payment.gst
                 cst_unpaid+=payment.cst
+                
+    pending_payments = 0
+    recived_payments = 0
 
+    for payment in Payment.objects.all():
+        pending_payments+=payment.remaining
+        recived_payments+=payment.paid
+    print(pending_payments)
+    print(recived_payments)
+            
     dt = datetime.date.today()
     upcoming_orders = []
     todays_orders = Order.objects.filter(from_date=str(dt)).count()
@@ -43,7 +55,14 @@ def dashboard(request):
     orders_month_count = []
     for month in range(1,13):
         orders_month_count.append(Order.objects.filter(from_date__month=str(month)).count())
-    print(orders_month_count)
+    revenue_month = []
+    for month in range(1,13):
+        monthly_revenue = 0
+        for order in Order.objects.filter(from_date__month=str(month)):
+            monthly_revenue+=order.grand_total
+        revenue_month.append(monthly_revenue)
+    
+
     inventory = Inventory.objects.all()
     context={
         'total_customers':total_customers,
@@ -53,6 +72,9 @@ def dashboard(request):
         'todays_orders':todays_orders,
         'upcoming_orders':len(upcoming_orders),
         'inventory':inventory,
-        'orders_month_count':orders_month_count
+        'orders_month_count':orders_month_count,
+        'revenue_month':revenue_month,
+        'pending_payments':pending_payments,
+        'recived_payments':recived_payments
     }
     return render(request,'home/dashboard.html',context=context)

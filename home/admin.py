@@ -33,7 +33,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 class PaymentAdmin(admin.ModelAdmin):
 
-    readonly_fields = ('remaining', 'cst', 'gst',
+    readonly_fields = ('order','remaining', 'cst', 'gst',
                        'status', 'paid', 'order_status')
 
 
@@ -82,18 +82,23 @@ class TaxSummaryAdmin(admin.ModelAdmin):
         order_id = []
         item_total = []
         gst_status = []
+        customer_name = []
         for q in qs:
             gst.append(q.gst)
             cst.append(q.cst)
             order_id.append(q.id)
             item_total.append(q.total)
             gst_status.append(q.gst_status)
+            customer_name.append(q.customer.name)
 
-        response.context_data['details'] = zip(order_id, gst, cst, item_total,gst_status)
+        response.context_data['details'] = zip(order_id, gst, cst, item_total,gst_status,customer_name)
         response.context_data['gst_total'] = total_gst
         response.context_data['cst_total'] = total_cst
         return response
 
+    def has_add_permission(self, request):
+        return False
+    
 
 class PaymentSummaryAdmin(admin.ModelAdmin):
     change_list_template = 'admin/pay_summary_change_list.html'
@@ -101,7 +106,7 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('yo/<int:order>', self.changelist_view, name='yo'),
+            path('paysummary/<int:order>', self.changelist_view, name='paysummary'),
         ]
         return my_urls + urls
 
@@ -120,33 +125,38 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
         response.context_data['payments'] = qs.get(
             order=order).paymentdetail_set.all()
         response.context_data['order'] = order
+        response.context_data['iteminst'] = order.iteminst_set.all()
         return response
 
     def get_model_perms(self, request): return {}
 
+    def has_add_permission(self, request):
+        return False
+
 
 class InventoryAdmin(admin.ModelAdmin):
-    fields = ('stock','rented','available',)
-    readonly_fields = ('rented','available',)
+    fields = ('name','stock','rented','available',)
+    readonly_fields = ('name','rented','available',)
 
 class ItemAdmin(admin.ModelAdmin):
     fields = ('name','price','gst','cst','image')
 
 class FeedbackAdmin(admin.ModelAdmin):
-    readonly_fields = ('name','email','comment')
+    pass
 
 admin.site.register(Feedback,FeedbackAdmin)
 admin.site.register(TaxSummary, TaxSummaryAdmin)
 admin.site.register(Customer)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Item, ItemAdmin)
-admin.site.register(ItemInst)
+# admin.site.register(ItemInst)
 admin.site.register(Payment, PaymentAdmin)
-admin.site.register(PaymentDetail)
+# admin.site.register(PaymentDetail)
 admin.site.register(PaymentSummary, PaymentSummaryAdmin)
 admin.site.unregister(Group)
 admin.site.unregister(User)
 admin.site.register(Inventory, InventoryAdmin)
-admin.site.site_header = "Event Rental Admin"
-admin.site.site_title = "Event Rental Portal"
-admin.site.index_title = "Event Rental"
+admin.site.site_header = "Pradnya Decorators"
+admin.site.site_title = "Pradnya Decorators"
+admin.site.index_title = "Pradnya Decorators"
+

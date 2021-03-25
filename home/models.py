@@ -96,7 +96,7 @@ class Order(models.Model):
     
 
     def __str__(self):
-        return str(self.customer)
+        return f'Order#{self.id} {self.customer.name}'
 
 
 class ItemInst(models.Model):
@@ -207,7 +207,7 @@ class Payment(models.Model):
         return total
 
     def __str__(self):
-        return f'Order ID: {self.order.id}'
+        return f'Order#{self.order.id} {self.order.customer.name}'
 
 class Feedback(models.Model):
     name = models.CharField(max_length=100)
@@ -246,6 +246,9 @@ class Inventory(Item):
     
     class Meta:
         proxy=True
+        verbose_name = 'Inventory'
+        verbose_name_plural = 'Inventory'
+
 
 def create_payment(sender, instance, **kwargs):
 

@@ -79,12 +79,12 @@ WSGI_APPLICATION = 'money.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.sqlite3', #django.db.backends.postgresql_psycopg2
         'NAME': 'mandav',
-        'USER':'firefly',
-        'PASSWORD':'newpass1',
-        'HOST':'localhost',
-        'PORT':'',
+        # 'USER':'firefly',
+        # 'PASSWORD':'newpass1',
+        # 'HOST':'localhost',
+        # 'PORT':'',
     }
 }
 

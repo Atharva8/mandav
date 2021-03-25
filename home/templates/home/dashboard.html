@@ -67,7 +67,7 @@
           <h5 class="card-header">Pending GST</h5>
           <div class="card-body">
 
-            <a href="#" class="btn btn-primary w-100">₹{{gst_unpaid}}</a>
+            <a href="#" class="btn btn-primary w-100">₹{{gst_unpaid | floatformat:2}}</a>
           </div>
         </div>
       </div>
@@ -76,35 +76,55 @@
           <h5 class="card-header">Pending CST</h5>
           <div class="card-body">
 
-            <a href="#" class="btn btn-primary w-100">₹{{cst_unpaid}}</a>
+            <a href="#" class="btn btn-primary w-100">₹{{cst_unpaid | floatformat:2}}</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="card text-center">
+          <h5 class="card-header">Pending Payments</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">₹{{pending_payments | floatformat:2}}</a>
           </div>
         </div>
       </div>
 
-      <div class="col-sm-5">
-        <table class="table border rounded">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Item</th>
-              <th scope="col">Rented</th>
-              <th scope="col">Available</th>
-            </tr>
-          </thead>
-          <tbody>
-            {%for item in inventory%}
-            <tr>
-              <th scope="row">{{forloop.counter}}</th>
-              <td>{{item.name}}</td>
-              <td>{{item.rented}}</td>
-              <td>{{item.available}}</td>
-            </tr>
-            {%endfor%}
-          </tbody>
-        </table>
+      <div class="col-sm-3">
+        <div class="card text-center">
+          <h5 class="card-header">Pending CST</h5>
+          <div class="card-body">
+
+            <a href="#" class="btn btn-primary w-100">₹{{recived_payments | floatformat:2}}</a>
+          </div>
+        </div>
       </div>
-    </div>
+      
     <canvas id="myChart"></canvas>
+    <canvas id="myChart1"></canvas>
+    <div class="row">
+      <table class="table border rounded">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Item</th>
+            <th scope="col">Rented</th>
+            <th scope="col">Available</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%for item in inventory%}
+          <tr>
+            <th scope="row">{{forloop.counter}}</th>
+            <td>{{item.name}}</td>
+            <td>{{item.rented}}</td>
+            <td>{{item.available}}</td>
+          </tr>
+          {%endfor%}
+        </tbody>
+      </table>
+    </div>
+  </div>
   </div>
   
   <script>
@@ -122,10 +142,36 @@ var chart = new Chart(ctx, {
     data: {
         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July','August','September','October','September'],
         datasets: [{
-            label: 'Orders',
+            label: 'Orders by Month',
             backgroundColor: 'rgb(255, 255, 132)',
             borderColor: 'rgb(255, 99, 132)',
             data: order_month
+        }]
+    },
+
+    // Configuration options go here
+    options: {}
+});
+  </script>
+  <script>
+    var ctx = document.getElementById('myChart1').getContext('2d');
+    var revenue_month = [];
+    {%for revenue in revenue_month%}
+      revenue_month[{{forloop.counter0}}] = {{revenue}};
+    {%endfor%}
+    console.log(revenue_month);
+var chart = new Chart(ctx, {
+    // The type of chart we want to create
+    type: 'line',
+
+    // The data for our dataset
+    data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July','August','September','October','September'],
+        datasets: [{
+            label: 'Revenue by Month',
+            
+            borderColor: 'rgb(255, 99, 132)',
+            data: revenue_month
         }]
     },
 

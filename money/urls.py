@@ -21,7 +21,7 @@ from django.conf.urls.static import static # new
 from home.views import index,dashboard
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('home/', index, name='home'),
+    path('', index, name='home'),
     path('dashboard/',dashboard, name='dashboard')
 ]
 if settings.DEBUG: # new
