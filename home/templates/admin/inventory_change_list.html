@@ -1,0 +1,34 @@
+{% extends "admin/change_list.html" %}
+{% load humanize admin_list%}
+{% block content_title %}
+    <h1>Select Payment to change</h1>
+{% endblock%}
+
+{% block result_list %}
+{% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+{% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+
+<table>
+    <thead>
+        <th></th>
+        <th>Item</th>
+        <th>Stock</th>
+        <th>Rented</th>
+        <th>Available</th>
+    </thead>
+    <tbody>
+        {%for item in cl.queryset%}
+        <tr>
+            <td><input type="checkbox" name="_selected_action" value={{item.id}} class="action-select"> </td> 
+            <td><a href="/admin/home/inventory/{{item.id}}/change/">{{item}}</a></td>
+            <td>{{item.stock}}</td>
+            <td>{{item.rented}}</td>
+            <td>{{item.available}}</td>
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block pagination %}{% endblock %}

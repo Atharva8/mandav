@@ -5,6 +5,7 @@ from django.db.models.signals import post_save, pre_save, post_delete
 from django.db import DefaultConnectionProxy, models
 import datetime
 from django.core.exceptions import ValidationError
+from PIL import Image
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
@@ -28,7 +29,6 @@ class Item(models.Model):
     @property
     def available(self):
         return self.stock - self.rented
-    
 
     def __str__(self):
         return self.name
@@ -287,8 +287,16 @@ def update_inventory(sender, instance, **kwargs):
         item_invent.save()
     
 
-
+def resize_image(sender, instance, **kwargs):
+    print(instance.image)
+    basewidth = 400
+    img = Image.open(f'media/{instance.image}')
+    wpercent = (basewidth / float(img.size[0]))
+    hsize = int((float(img.size[1]) * float(wpercent)))
+    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+    img.save(f'media/{instance.image}')
+    
 post_save.connect(create_payment, sender=Order)
 pre_save.connect(set_paid_zero, sender=Payment)
 post_delete.connect(update_inventory, sender=ItemInst)
-
+post_save.connect(resize_image, sender=Item)

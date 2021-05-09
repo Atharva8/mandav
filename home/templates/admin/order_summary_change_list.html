@@ -1,0 +1,38 @@
+{% extends "admin/change_list.html" %}
+{% load humanize admin_list%}
+{% block content_title %}
+    <h1>Select Order to change</h1>
+{% endblock%}
+
+{% block result_list %}
+{% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+{% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+
+<table>
+    <thead>
+        <th></th>
+        <th>Order</th>
+        <th>From Date</th>
+        <th>Till Date</th>
+        <th>Grand Total</th>
+        <th>Status</th>
+        <th>Payment Status</th>
+    </thead>
+    <tbody>
+        {%for order in cl.queryset%}
+        <tr>
+            <td><input type="checkbox" name="_selected_action" value={{order.id}} class="action-select"> </td> 
+            <td><a href="/admin/home/order/{{order.id}}/change/">{{order}}</a></td>
+            <td>{{order.from_date}}</td>
+            <td>{{order.till_date}}</td>
+            <td>{{order.grand_total  | floatformat:2 }}</td>
+            <td>{{order.status}}</td>
+            <td>{{order.payment_status}}</td>
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block pagination %}{% endblock %}

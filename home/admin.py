@@ -16,7 +16,7 @@ class ItemInstInline(admin.TabularInline):
 
 
 class OrderAdmin(admin.ModelAdmin):
-
+    change_list_template = 'admin/order_summary_change_list.html'
     inlines = [
         ItemInstInline,
     ]
@@ -30,11 +30,35 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ('total', 'gst', 'cst', 'grand_total',
                        'payment_status', 'gst_status')
 
+    def changelist_view(self, request, extra_content=None):
+        response = super().changelist_view(
+            request,
+            extra_content
+        )
+        try:
+            qs = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+        print(qs)
+        return response
+
 
 class PaymentAdmin(admin.ModelAdmin):
-
-    readonly_fields = ('order','remaining', 'cst', 'gst',
+    change_list_template = 'admin/payment_change_list.html'
+    readonly_fields = ('order', 'remaining', 'cst', 'gst',
                        'status', 'paid', 'order_status')
+
+    def changelist_view(self, request, extra_content=None):
+        response = super().changelist_view(
+            request,
+            extra_content
+        )
+        try:
+            qs = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+        print(qs)
+        return response
 
 
 def make_gst(modeladmin, request, queryset):
@@ -70,7 +94,7 @@ class TaxSummaryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-
+        print(qs)
         total_gst = 0
         total_cst = 0
         for i in qs:
@@ -83,6 +107,7 @@ class TaxSummaryAdmin(admin.ModelAdmin):
         item_total = []
         gst_status = []
         customer_name = []
+        grand_total = []
         for q in qs:
             gst.append(q.gst)
             cst.append(q.cst)
@@ -90,15 +115,18 @@ class TaxSummaryAdmin(admin.ModelAdmin):
             item_total.append(q.total)
             gst_status.append(q.gst_status)
             customer_name.append(q.customer.name)
+            grand_total.append(q.grand_total)
 
-        response.context_data['details'] = zip(order_id, gst, cst, item_total,gst_status,customer_name)
+        response.context_data['details'] = zip(
+            order_id, gst, cst, item_total, gst_status, customer_name, grand_total)
         response.context_data['gst_total'] = total_gst
         response.context_data['cst_total'] = total_cst
+        response.context_data
         return response
 
     def has_add_permission(self, request):
         return False
-    
+
 
 class PaymentSummaryAdmin(admin.ModelAdmin):
     change_list_template = 'admin/pay_summary_change_list.html'
@@ -106,7 +134,8 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('paysummary/<int:order>', self.changelist_view, name='paysummary'),
+            path('paysummary/<int:order>',
+                 self.changelist_view, name='paysummary'),
         ]
         return my_urls + urls
 
@@ -135,16 +164,32 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
 
 
 class InventoryAdmin(admin.ModelAdmin):
-    fields = ('name','stock','rented','available',)
-    readonly_fields = ('name','rented','available',)
+    fields = ('name', 'stock', 'rented', 'available',)
+    readonly_fields = ('name', 'rented', 'available',)
+    change_list_template = 'admin/inventory_change_list.html'
+    def changelist_view(self, request, extra_content=None):
+        response = super().changelist_view(
+            request,
+            extra_content
+        )
+        try:
+            qs = response.context_data['cl'].queryset
+        except (AttributeError, KeyError):
+            return response
+        print(qs)
+        return response
+
 
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('name','price','gst','cst','image')
+    fields = ('name', 'price', 'gst', 'cst', 'image')
+
 
 class FeedbackAdmin(admin.ModelAdmin):
     pass
 
-admin.site.register(Feedback,FeedbackAdmin)
+
+PRADNYA_DECORATORS = "Pradnya Decorators"
+admin.site.register(Feedback, FeedbackAdmin)
 admin.site.register(TaxSummary, TaxSummaryAdmin)
 admin.site.register(Customer)
 admin.site.register(Order, OrderAdmin)
@@ -156,7 +201,6 @@ admin.site.register(PaymentSummary, PaymentSummaryAdmin)
 admin.site.unregister(Group)
 admin.site.unregister(User)
 admin.site.register(Inventory, InventoryAdmin)
-admin.site.site_header = "Pradnya Decorators"
-admin.site.site_title = "Pradnya Decorators"
-admin.site.index_title = "Pradnya Decorators"
-
+admin.site.site_header = PRADNYA_DECORATORS
+admin.site.site_title = PRADNYA_DECORATORS
+admin.site.index_title = PRADNYA_DECORATORS

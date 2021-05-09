@@ -14,6 +14,7 @@
   body {
     font: 400 15px/1.8 Lato, sans-serif;
     color: #777;
+    background-image: url("media/images/background.jpg");
   }
   h3, h4 {
     margin: 10px 0 30px 0;
@@ -134,6 +135,11 @@
   .dropdown-menu li a:hover {
     background-color: red !important;
   }
+  .center {
+  margin: auto;
+  width: 50%;
+  padding: 10px;
+}
   footer {
     background-color: #2d2d30;
     color: #f5f5f5;
@@ -154,7 +160,7 @@
   }
   </style>
 </head>
-<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="50">
+<body id="myPage" data-spy="scroll" data-target=".navbar" data-offset="50" >
 
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
@@ -170,7 +176,6 @@
       <ul class="nav navbar-nav navbar-right">
         <li><a href="#myPage">HOME</a></li>
         <li><a href="#band">About</a></li>
-        <!-- <li><a href="#tour">TOUR</a></li> -->
         <li><a href="#contact">CONTACT</a></li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">MORE
@@ -185,8 +190,8 @@
     </div>
   </div>
 </nav>
-
-<div id="myCarousel" class="carousel slide" data-ride="carousel">
+<div style="height: 10cm;width: 10cm;color: black;" class="center" >
+  <div id="myCarousel" class="carousel slide" data-ride="carousel" style="height: 10cm;width: 10cm;">
     <!-- Indicators -->
     <ol class="carousel-indicators">
       {%for item in items%}
@@ -198,10 +203,9 @@
     <div class="carousel-inner" role="listbox">
       {%for item in items%}
       <div class="item {%if forloop.counter == 1%}active{%endif%}">
-        <img src="{{item.image.url}}" alt="New York" width="1200" height="700">
+        <img src="{{item.image.url}}" style="height: 10cm;width: 10cm;" >
         <div class="carousel-caption">
-          <h3>New York</h3>
-          <p>The atmosphere in New York is lorem ipsum.</p>
+          <h3 style="color:black">{{item.name}}</h3>
         </div>      
       </div>
       {%endfor%}
@@ -218,6 +222,8 @@
       <span class="sr-only">Next</span>
     </a>
 </div>
+</div>
+
 
 <!-- Container (The Band Section) -->
 <div id="band" class="container text-center">

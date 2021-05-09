@@ -13,15 +13,17 @@
         <th>Item Total(&#8377)</th>
         <th>GST(&#8377)</th>
         <th>CST(&#8377)</th>
+        <th>Grand Total</th>
         <th>Pay</th>
     </thead>
     <tbody>
-        {%for order_id, gst, cst , item_total, gst_status, customer_name in details%}
+        {%for order_id, gst, cst , item_total, gst_status, customer_name, grand_total in details%}
         <tr>
             <td><a href="/admin/home/paymentsummary/paysummary/{{order_id}}">Order#{{order_id}} {{customer_name}}</a></td>
             <td>{{item_total | floatformat:2}}</td>
             <td>{{gst | floatformat:2}}</td>
             <td>{{cst | floatformat:2}}</td>
+            <td>{{grand_total | floatformat:2}}</td>
             <td> {%if gst_status == "Unpaid"%}<input type="checkbox" name="_selected_action" value={{order_id}} class="action-select"> {%else%}{{gst_status}}{%endif%}</td> 
         </tr>
         {%endfor%}
