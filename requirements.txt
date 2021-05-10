@@ -27,3 +27,4 @@ typing-extensions==3.7.4.3
 vine==5.0.0
 wcwidth==0.2.5
 zipp==3.4.0
+django-cleanup==5.2.0
