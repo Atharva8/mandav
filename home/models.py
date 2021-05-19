@@ -19,16 +19,29 @@ from django.conf import settings
 
 class Item(models.Model):
     name = models.CharField(max_length=30)
-    price = models.PositiveIntegerField(verbose_name='Price(₹)')
+    price_by_day = models.PositiveIntegerField(default=0,verbose_name='Price by day(₹)')
+    price_by_hour = models.PositiveIntegerField(default=0,verbose_name='Price by hour(₹)')
     cst = models.PositiveIntegerField(verbose_name='CST(%)')
     gst = models.PositiveIntegerField(verbose_name='GST(%)')
     stock = models.PositiveIntegerField(default=0)
-    rented = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to='images/',blank=True)
 
     @property
+    def rented(self):
+        item = ItemInst.objects.filter(item=self.id).exclude(order__status="Fulfilled").aggregate(Sum('quantity'))
+        if item['quantity__sum'] is None:
+            return 0
+
+        return item['quantity__sum']
+    @property
     def available(self):
-        return self.stock - self.rented
+        item = ItemInst.objects.filter(item=self.id).exclude(order__status="Fulfilled").aggregate(Sum('quantity'))
+        total_sum = item['quantity__sum']
+        if  total_sum is None:
+            total_sum = 0
+
+        return self.stock-self.rented
+
 
     def __str__(self):
         return self.name
@@ -94,6 +107,11 @@ class Order(models.Model):
         return g_total
 
     
+    def clean(self, *args, **kwargs):
+        items = ItemInst.objects.exclude(order__status="Fulfilled")
+        # print(self.iteminst_set.all())        
+        super(Order, self).clean(*args, **kwargs)
+
 
     def __str__(self):
         return f'Order#{self.id} {self.customer.name}'
@@ -104,24 +122,40 @@ class ItemInst(models.Model):
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     last_value = models.IntegerField(default=0)
+    by_hour = models.BooleanField(default=False)
+    from_date = models.DateTimeField()
+    till_date = models.DateTimeField()
     @property
     def duration(self):
         if self.order.till_date == None:
             return 0
-        days = self.order.till_date-self.order.from_date
-        return abs(days.days)
+        if self.by_hour:
+            delta = int(((self.till_date-self.from_date).seconds)/3600)
+            return delta
 
+        days = self.order.till_date-self.order.from_date
+        return abs(days.days)+1
+    @property
+    def is_enabled(self):
+        if self.by_hour:
+            return self.from_date
     @property
     def price(self):
-        return abs(self.item.price * self.quantity)
+        if not self.by_hour:
+            return abs(self.item.price_by_day * self.quantity)
+        return abs(self.item.price_by_hour * self.quantity)
 
     @property
     def item_total(self):
         return abs(self.price*self.duration)
 
     @property
-    def item_price(self):
-        return abs(self.item.price)
+    def item_price_by_hour(self):
+        return abs(self.item.price_by_hour)
+
+    @property
+    def item_price_by_day(self):
+        return abs(self.item.price_by_day)
 
     @property
     def gst(self):
@@ -136,15 +170,15 @@ class ItemInst(models.Model):
         return abs(self.item_total+self.cst+self.gst)
     
     def clean(self) :
-        item_invent = Item.objects.get(name = self.item.name)
-        item_invent.rented += self.quantity-self.last_value
-        if item_invent.rented > item_invent.stock:
-            raise ValidationError('Item placed greater than in the inventory')
-        item_invent.save()
-        print(self.quantity-self.last_value)
-        self.last_value = self.quantity
-        print(self.order.status)
-            
+        # item_invent = Item.objects.get(name = self.item.name)
+        # item_invent.rented += self.quantity-self.last_value
+        # if item_invent.rented > item_invent.stock:
+        #     raise ValidationError('Item placed greater than in the inventory')
+        # item_invent.save()
+        # # print(self.quantity-self.last_value)
+        # self.last_value = self.quantity
+        # print(self.order.status)
+        pass
         
 
     def __str__(self):
@@ -215,6 +249,7 @@ class Feedback(models.Model):
     comment = models.TextField()
     def __str__(self):
         return self.name
+        
 class PaymentDetail(models.Model):
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     method = models.CharField(max_length=100, default='Cash')
@@ -280,23 +315,24 @@ def set_paid_zero(sender, instance, **kwargs):
                 instance.cheque_no = ''
                 instance.amount = 0
 
-def update_inventory(sender, instance, **kwargs):
-    item_invent = Inventory.objects.get(id = instance.item.pk)
-    if instance.order.status != "Fulfilled":
-        item_invent.rented-=instance.quantity
-        item_invent.save()
+# def update_inventory(sender, instance, **kwargs):
+#     item_invent = Inventory.objects.get(id = instance.item.pk)
+#     if instance.order.status != "Fulfilled":
+#         item_invent.rented-=instance.quantity
+#         item_invent.save()
     
 
 def resize_image(sender, instance, **kwargs):
-    print(instance.image)
+    # print(instance.image)
     basewidth = 400
     img = Image.open(f'media/{instance.image}')
     wpercent = (basewidth / float(img.size[0]))
     hsize = int((float(img.size[1]) * float(wpercent)))
     img = img.resize((basewidth, hsize), Image.ANTIALIAS)
     img.save(f'media/{instance.image}')
-    
+
+
 post_save.connect(create_payment, sender=Order)
 pre_save.connect(set_paid_zero, sender=Payment)
-post_delete.connect(update_inventory, sender=ItemInst)
+# post_delete.connect(update_inventory, sender=ItemInst)
 post_save.connect(resize_image, sender=Item)

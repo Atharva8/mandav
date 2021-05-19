@@ -5,17 +5,19 @@ from rangefilter.filter import DateRangeFilter
 from django.urls import path
 from django.contrib.auth.models import Group, User
 from django.utils.translation import ngettext
-
+from home.forms import ItemInstForm, OrderForm
 
 class ItemInstInline(admin.TabularInline):
+    form = ItemInstForm
     model = ItemInst
-    readonly_fields = ('item_price', 'duration',
+    readonly_fields = ('item_price_by_hour','item_price_by_day', 'duration',
                        'item_total', 'gst', 'cst', 'total',)
     exclude = ('last_value',)
     extra = 1
 
 
 class OrderAdmin(admin.ModelAdmin):
+    form = OrderForm
     change_list_template = 'admin/order_summary_change_list.html'
     inlines = [
         ItemInstInline,
@@ -39,7 +41,7 @@ class OrderAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs)
+        # print(qs)
         return response
 
 
@@ -57,7 +59,7 @@ class PaymentAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs)
+        # print(qs)
         return response
 
 
@@ -94,7 +96,7 @@ class TaxSummaryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs)
+        # print(qs)
         total_gst = 0
         total_cst = 0
         for i in qs:
@@ -176,12 +178,12 @@ class InventoryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs)
+        print(qs[0].available)
         return response
 
 
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('name', 'price', 'gst', 'cst', 'image')
+    fields = ('name', 'price_by_hour', 'gst', 'cst', 'image','price_by_day')
 
 
 class FeedbackAdmin(admin.ModelAdmin):
@@ -194,7 +196,7 @@ admin.site.register(TaxSummary, TaxSummaryAdmin)
 admin.site.register(Customer)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Item, ItemAdmin)
-# admin.site.register(ItemInst)
+admin.site.register(ItemInst)
 admin.site.register(Payment, PaymentAdmin)
 # admin.site.register(PaymentDetail)
 admin.site.register(PaymentSummary, PaymentSummaryAdmin)
