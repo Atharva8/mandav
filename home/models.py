@@ -131,16 +131,7 @@ class ItemInst(models.Model):
     till_date = models.DateTimeField()
     duration = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=15, default='Incomplete', choices=ITEM_STATUS)
-    # @property
-    # def duration(self):
-    #     if self.order.till_date == None:
-    #         return 0
-    #     if self.by_hour:
-    #         delta = int(((self.till_date-self.from_date).seconds)/3600)
-    #         return delta
 
-    #     days = self.order.till_date-self.order.from_date
-    #     return abs(days.days)+1
     @property
     def is_enabled(self):
         if self.by_hour:
@@ -320,12 +311,6 @@ def set_paid_zero(sender, instance, **kwargs):
 
                 instance.cheque_no = ''
                 instance.amount = 0
-
-# def update_inventory(sender, instance, **kwargs):
-#     item_invent = Inventory.objects.get(id = instance.item.pk)
-#     if instance.order.status != "Fulfilled":
-#         item_invent.rented-=instance.quantity
-#         item_invent.save()
     
 
 def resize_image(sender, instance, **kwargs):
