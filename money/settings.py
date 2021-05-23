@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rangefilter', 
     'django.contrib.humanize',
     'django_cleanup.apps.CleanupConfig',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [

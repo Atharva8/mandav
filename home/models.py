@@ -118,6 +118,10 @@ class Order(models.Model):
 
 
 class ItemInst(models.Model):
+    ITEM_STATUS = (
+        ('Incomplete', 'Incomplete'),
+        ('Complete', 'Complete'),
+    )
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -125,16 +129,18 @@ class ItemInst(models.Model):
     by_hour = models.BooleanField(default=False)
     from_date = models.DateTimeField()
     till_date = models.DateTimeField()
-    @property
-    def duration(self):
-        if self.order.till_date == None:
-            return 0
-        if self.by_hour:
-            delta = int(((self.till_date-self.from_date).seconds)/3600)
-            return delta
+    duration = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=15, default='Incomplete', choices=ITEM_STATUS)
+    # @property
+    # def duration(self):
+    #     if self.order.till_date == None:
+    #         return 0
+    #     if self.by_hour:
+    #         delta = int(((self.till_date-self.from_date).seconds)/3600)
+    #         return delta
 
-        days = self.order.till_date-self.order.from_date
-        return abs(days.days)+1
+    #     days = self.order.till_date-self.order.from_date
+    #     return abs(days.days)+1
     @property
     def is_enabled(self):
         if self.by_hour:
@@ -331,8 +337,18 @@ def resize_image(sender, instance, **kwargs):
     img = img.resize((basewidth, hsize), Image.ANTIALIAS)
     img.save(f'media/{instance.image}')
 
+def update_duration(sender, instance, **kwargs):
+    delta = 0
+    if instance.by_hour:
+        delta = int(((instance.till_date-instance.from_date).seconds)/3600)
+    else:
+        delta = instance.till_date-instance.from_date
+        delta = abs(delta.days)+1
+    instance.duration = delta
+    
 
 post_save.connect(create_payment, sender=Order)
 pre_save.connect(set_paid_zero, sender=Payment)
 # post_delete.connect(update_inventory, sender=ItemInst)
 post_save.connect(resize_image, sender=Item)
+pre_save.connect(update_duration, sender=ItemInst)
