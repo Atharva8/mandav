@@ -11,7 +11,7 @@ class ItemInstInline(admin.TabularInline):
     form = ItemInstForm
     model = ItemInst
     readonly_fields = ('price_by_hour','price_by_day', 'duration',
-                       'item_total', 'gst', 'cst', 'total',)
+                       'item_total', 'gst', 'cst', 'total','price')
     exclude = ('last_value',)
     extra = 1
 

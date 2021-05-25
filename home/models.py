@@ -1,6 +1,8 @@
 from django.db.models.aggregates import Sum
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db.models.base import ModelStateFieldsCacheDescriptor
+
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
@@ -10,31 +12,36 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 
+
 class Item(models.Model):
     name = models.CharField(max_length=30)
-    price_by_day = models.PositiveIntegerField(default=0,verbose_name='Price by day(₹)')
-    price_by_hour = models.PositiveIntegerField(default=0,verbose_name='Price by hour(₹)')
+    price_by_day = models.PositiveIntegerField(
+        default=0, verbose_name='Price by day(₹)')
+    price_by_hour = models.PositiveIntegerField(
+        default=0, verbose_name='Price by hour(₹)')
     cst = models.PositiveIntegerField(verbose_name='CST(%)')
     gst = models.PositiveIntegerField(verbose_name='GST(%)')
     stock = models.PositiveIntegerField(default=0)
-    image = models.ImageField(upload_to='images/',blank=True)
+    image = models.ImageField(upload_to='images/', blank=True)
 
     @property
     def rented(self):
-        item = ItemInst.objects.filter(item=self.id).exclude(order__status="Fulfilled").aggregate(Sum('quantity'))
+        item = ItemInst.objects.filter(item=self.id).exclude(
+            order__status="Fulfilled").aggregate(Sum('quantity'))
         if item['quantity__sum'] is None:
             return 0
 
         return item['quantity__sum']
+
     @property
     def available(self):
-        item = ItemInst.objects.filter(item=self.id).exclude(order__status="Fulfilled").aggregate(Sum('quantity'))
+        item = ItemInst.objects.filter(item=self.id).exclude(
+            order__status="Fulfilled").aggregate(Sum('quantity'))
         total_sum = item['quantity__sum']
-        if  total_sum is None:
+        if total_sum is None:
             total_sum = 0
 
         return self.stock-self.rented
-
 
     def __str__(self):
         return self.name
@@ -65,41 +72,11 @@ class Order(models.Model):
         max_length=10, default='Incomplete', choices=PAYMENT_STATUS)
     gst_status = models.CharField(
         max_length=10, default='Unpaid', choices=GST_STATUS)
+    total = models.FloatField(default=0)
+    gst = models.FloatField(default=0)
+    cst = models.FloatField(default=0)
+    grand_total = models.FloatField(default=0)
 
-    @property
-    def total(self):
-        total = 0
-        if self.till_date == None:
-            return 0
-        for i in self.iteminst_set.filter(order=self.id):
-            total += i.item_total
-        return total
-
-
-    @property
-    def gst(self):
-        gst = 0
-        for i in self.iteminst_set.all():
-            gst += i.gst
-        self.total_gst = gst
-        return gst
-
-    @property
-    def cst(self):
-        cst = 0
-        for i in self.iteminst_set.all():
-            cst += i.cst
-        self.total_cst = cst
-        return cst
-
-    @property
-    def grand_total(self):
-        g_total = 0
-        for i in self.iteminst_set.filter(order=self.id):
-            g_total += i.total
-        return g_total
-
-    
     def __str__(self):
         return f'Order#{self.id} {self.customer.name}'
 
@@ -117,7 +94,13 @@ class ItemInst(models.Model):
     from_date = models.DateTimeField()
     till_date = models.DateTimeField()
     duration = models.PositiveIntegerField(default=0)
-    status = models.CharField(max_length=15, default='Incomplete', choices=ITEM_STATUS)
+    status = models.CharField(
+        max_length=15, default='Incomplete', choices=ITEM_STATUS)
+    gst = models.FloatField(default=0)
+    cst = models.FloatField(default=0)
+    price = models.FloatField(default=0)
+    total = models.FloatField(default=0)
+    item_total = models.FloatField(default=0)
 
     @property
     def price_by_day(self):
@@ -126,29 +109,7 @@ class ItemInst(models.Model):
     @property
     def price_by_hour(self):
         return self.item.price_by_hour
-        
-    @property
-    def price(self):
-        if not self.by_hour:
-            return abs(self.item.price_by_day * self.quantity)
-        return abs(self.item.price_by_hour * self.quantity)
 
-    @property
-    def item_total(self):
-        return abs(self.price*self.duration)
-
-    @property
-    def gst(self):
-        return calculate_tax(self.item.gst,self.item_total)
-
-    @property
-    def cst(self):
-        return calculate_tax(self.item.cst,self.item_total)
-
-    @property
-    def total(self):
-        return abs(self.item_total+self.cst+self.gst)
-            
     def __str__(self):
         return str(self.item)
 
@@ -166,7 +127,7 @@ class Payment(models.Model):
         default=0, blank=True, verbose_name='Amount(₹)')
     cheque_no = models.CharField(max_length=100, blank=True)
 
-#TODO
+# TODO
 
     def clean(self, *args, **kwargs):
         if self.amount > self.remaining:
@@ -213,13 +174,16 @@ class Payment(models.Model):
     def __str__(self):
         return f'Order#{self.order.id} {self.order.customer.name}'
 
+
 class Feedback(models.Model):
     name = models.CharField(max_length=100)
     email = models.CharField(max_length=100)
     comment = models.TextField()
+
     def __str__(self):
         return self.name
-        
+
+
 class PaymentDetail(models.Model):
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     method = models.CharField(max_length=100, default='Cash')
@@ -247,10 +211,11 @@ class PaymentSummary(Payment):
         verbose_name = 'Payment Summary'
         verbose_name_plural = 'Payment Summary'
 
+
 class Inventory(Item):
-    
+
     class Meta:
-        proxy=True
+        proxy = True
         verbose_name = 'Inventory'
         verbose_name_plural = 'Inventory'
 

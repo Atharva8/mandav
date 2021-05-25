@@ -73,6 +73,8 @@ def inventory_by_day(item_inst):
         existing_qty = 0
     else:
         existing_qty = ItemInst.objects.get(id=item_inst['id'].id).quantity
+    if total is None:
+        total=0
 
     if total+item.available < item_inst['quantity']-existing_qty:
         raise ValidationError('Item greater than available')

@@ -1,6 +1,7 @@
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import pre_delete, post_save, pre_save
 from django.dispatch import receiver
 from home.models import ItemInst, Payment, Order, PaymentDetail
+from django.db.models import Sum
 
 
 @receiver(post_save, sender=Order)
@@ -25,6 +26,7 @@ def set_duration(sender, instance, **kwargs):
     instance.duration = delta
 
 
+@receiver([pre_save], sender=Payment)
 def set_paid_zero(sender, instance, **kwargs):
 
     if sender == Payment and instance.pk != None and instance.amount > 0:
@@ -40,3 +42,69 @@ def set_paid_zero(sender, instance, **kwargs):
 
         instance.cheque_no = ''
         instance.amount = 0
+
+
+"This function updates ItemInst's GST, CST, Total and Price fields"
+
+
+@receiver(pre_save, sender=ItemInst)
+def iteminst_update_fields(sender, instance, **kwargs):
+    print(f'[Item GST]{instance.item.gst}')
+    print(f'[ItemInst Price]{instance.price}')
+    print(f'[Order]{instance.order}')
+    # Calculate Price
+    price = instance.item.price_by_hour if instance.by_hour else instance.item.price_by_day
+    instance.price = iteminst_calculate_price(price, instance.quantity)
+
+    # Calculate total without Tax
+    instance.item_total = iteminst_calculate_itotal(
+        instance.price, instance.duration)
+
+    # Calculate Tax
+    instance.gst = calculate_tax(instance.item.gst, instance.item_total)
+    instance.cst = calculate_tax(instance.item.cst, instance.item_total)
+
+    # Calculate Total with Tax
+    instance.total = calculate_grand_total(
+        instance.item_total, instance.cst, instance.gst)
+
+    instance.order.gst += instance.gst
+    instance.order.cst += instance.cst
+    instance.order.total += instance.item_total
+    instance.order.grand_total += instance.total
+    instance.order.save()
+
+# Item Inst Helper Functions
+
+
+def iteminst_calculate_price(price, quantity):
+    return abs(price*quantity)
+
+
+def iteminst_calculate_itotal(price, duration):
+    return abs(price*duration)
+
+
+def calculate_tax(tax_percent, total):
+    tax = abs((tax_percent/100)*total)
+    return tax
+
+
+def calculate_grand_total(item_total, cst, gst):
+    return abs(item_total+gst+cst)
+
+
+"Update Order after Iteminst is deleted"
+
+
+@receiver(pre_delete, sender=ItemInst)
+def update_order(sender, instance, **kwargs):
+    instance.order.gst -= instance.gst
+    instance.order.cst -= instance.cst
+    instance.order.total -= instance.item_total
+    instance.order.grand_total -= instance.total
+    instance.order.save()
+
+
+def print_name(name, value):
+    print(f'{name} {value}')
