@@ -1,11 +1,6 @@
-from django.contrib.admin.options import ModelAdmin
 from django.db.models.aggregates import Sum
-from django.db.models.enums import IntegerChoices
-from django.db.models.signals import post_save, pre_save, post_delete
-from django.db import DefaultConnectionProxy, models
-import datetime
+from django.db import models
 from django.core.exceptions import ValidationError
-from PIL import Image
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
@@ -14,8 +9,6 @@ class Customer(models.Model):
 
     def __str__(self):
         return self.name
-import os
-from django.conf import settings
 
 class Item(models.Model):
     name = models.CharField(max_length=30)
@@ -78,10 +71,10 @@ class Order(models.Model):
         total = 0
         if self.till_date == None:
             return 0
-
         for i in self.iteminst_set.filter(order=self.id):
             total += i.item_total
         return total
+
 
     @property
     def gst(self):
@@ -107,12 +100,6 @@ class Order(models.Model):
         return g_total
 
     
-    def clean(self, *args, **kwargs):
-        items = ItemInst.objects.exclude(order__status="Fulfilled")
-        # print(self.iteminst_set.all())        
-        super(Order, self).clean(*args, **kwargs)
-
-
     def __str__(self):
         return f'Order#{self.id} {self.customer.name}'
 
@@ -133,9 +120,13 @@ class ItemInst(models.Model):
     status = models.CharField(max_length=15, default='Incomplete', choices=ITEM_STATUS)
 
     @property
-    def is_enabled(self):
-        if self.by_hour:
-            return self.from_date
+    def price_by_day(self):
+        return self.item.price_by_day
+
+    @property
+    def price_by_hour(self):
+        return self.item.price_by_hour
+        
     @property
     def price(self):
         if not self.by_hour:
@@ -147,37 +138,17 @@ class ItemInst(models.Model):
         return abs(self.price*self.duration)
 
     @property
-    def item_price_by_hour(self):
-        return abs(self.item.price_by_hour)
-
-    @property
-    def item_price_by_day(self):
-        return abs(self.item.price_by_day)
-
-    @property
     def gst(self):
-        return abs((self.item.gst/100)*self.item_total)
+        return calculate_tax(self.item.gst,self.item_total)
 
     @property
     def cst(self):
-        return abs((self.item.cst/100)*self.item_total)
+        return calculate_tax(self.item.cst,self.item_total)
 
     @property
     def total(self):
         return abs(self.item_total+self.cst+self.gst)
-    
-    def clean(self) :
-        # item_invent = Item.objects.get(name = self.item.name)
-        # item_invent.rented += self.quantity-self.last_value
-        # if item_invent.rented > item_invent.stock:
-        #     raise ValidationError('Item placed greater than in the inventory')
-        # item_invent.save()
-        # # print(self.quantity-self.last_value)
-        # self.last_value = self.quantity
-        # print(self.order.status)
-        pass
-        
-
+            
     def __str__(self):
         return str(self.item)
 
@@ -194,6 +165,8 @@ class Payment(models.Model):
     amount = models.PositiveIntegerField(
         default=0, blank=True, verbose_name='Amount(₹)')
     cheque_no = models.CharField(max_length=100, blank=True)
+
+#TODO
 
     def clean(self, *args, **kwargs):
         if self.amount > self.remaining:
@@ -282,58 +255,6 @@ class Inventory(Item):
         verbose_name_plural = 'Inventory'
 
 
-def create_payment(sender, instance, **kwargs):
-
-    if sender == Order:
-        if Payment.objects.filter(order=instance).count() >= 1:
-            return
-        else:
-            payment = Payment.objects.create(
-                order=instance, date=instance.from_date)
-            payment.save()
-
-    
-
-def set_paid_zero(sender, instance, **kwargs):
-
-    if sender == Payment:
-        if instance.pk != None:
-
-            if instance.amount > 0:
-                details = PaymentDetail.objects.create(
-                    payment=instance, method=instance.method, amount=instance.amount, cheque_no=instance.cheque_no)
-                details.save()
-
-                if instance.status == 'Completed':
-                    order = Order.objects.get(id=instance.order.id)
-                    order.payment_status = 'Complete'
-                    order.save()
-
-                instance.cheque_no = ''
-                instance.amount = 0
-    
-
-def resize_image(sender, instance, **kwargs):
-    # print(instance.image)
-    basewidth = 400
-    img = Image.open(f'media/{instance.image}')
-    wpercent = (basewidth / float(img.size[0]))
-    hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-    img.save(f'media/{instance.image}')
-
-def update_duration(sender, instance, **kwargs):
-    delta = 0
-    if instance.by_hour:
-        delta = int(((instance.till_date-instance.from_date).seconds)/3600)
-    else:
-        delta = instance.till_date-instance.from_date
-        delta = abs(delta.days)+1
-    instance.duration = delta
-    
-
-post_save.connect(create_payment, sender=Order)
-pre_save.connect(set_paid_zero, sender=Payment)
-# post_delete.connect(update_inventory, sender=ItemInst)
-post_save.connect(resize_image, sender=Item)
-pre_save.connect(update_duration, sender=ItemInst)
+def calculate_tax(tax_percent, total):
+    tax = abs((tax_percent/100)*total)
+    return tax

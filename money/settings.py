@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home',
+    'home.apps.HomeConfig',
     'rangefilter', 
     'django.contrib.humanize',
     'django_cleanup.apps.CleanupConfig',
@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'money.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', #django.db.backends.postgresql_psycopg2
-        'NAME': 'mandav',
+        'NAME': os.path.join(BASE_DIR,'mandav'),
         # 'USER':'firefly',
         # 'PASSWORD':'newpass1',
         # 'HOST':'localhost',
@@ -131,9 +131,3 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'

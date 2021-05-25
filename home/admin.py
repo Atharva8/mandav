@@ -10,7 +10,7 @@ from home.forms import ItemInstForm, OrderForm
 class ItemInstInline(admin.TabularInline):
     form = ItemInstForm
     model = ItemInst
-    readonly_fields = ('item_price_by_hour','item_price_by_day', 'duration',
+    readonly_fields = ('price_by_hour','price_by_day', 'duration',
                        'item_total', 'gst', 'cst', 'total',)
     exclude = ('last_value',)
     extra = 1
@@ -41,7 +41,7 @@ class OrderAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        # print(qs)
+
         return response
 
 
@@ -59,21 +59,22 @@ class PaymentAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        # print(qs)
+
         return response
 
 
 def make_gst(modeladmin, request, queryset):
     updated = queryset.update(gst_status='Paid')
     modeladmin.message_user(request, ngettext(
-        '%d order was successfull marked as gst paid.',
-        '%d orders was successfull marked as gst paid.',
+        '%d order was successfully marked as GST paid.',
+        '%d orders was successfully marked as GST paid.',
         updated,
     ) % updated, messages.SUCCESS)
 
 
 make_gst.short_description = "Pay Tax"
 
+#TODO
 
 class TaxSummaryAdmin(admin.ModelAdmin):
     change_list_template = 'admin/gst_summary_change_list.html'
@@ -96,7 +97,7 @@ class TaxSummaryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        # print(qs)
+
         total_gst = 0
         total_cst = 0
         for i in qs:
@@ -178,7 +179,7 @@ class InventoryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-        print(qs[0].available)
+
         return response
 
 

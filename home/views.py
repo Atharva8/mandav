@@ -1,5 +1,3 @@
-from django.db.models.aggregates import Count, Sum
-from django.http.response import HttpResponse
 from django.shortcuts import render
 from home.models import Inventory, Item,Customer,Order, Payment, Feedback
 from django.contrib.auth.decorators import login_required
@@ -23,6 +21,7 @@ def index(request):
     items = Item.objects.all()
     return render(request,'home/index.html',context={'items':items,'feedbacks':random_items})
 
+
 @login_required(login_url='/admin/login/?next=/admin/')
 def dashboard(request):
     
@@ -42,8 +41,6 @@ def dashboard(request):
     for payment in Payment.objects.all():
         pending_payments+=payment.remaining
         recived_payments+=payment.paid
-    print(pending_payments)
-    print(recived_payments)
             
     dt = datetime.date.today()
     upcoming_orders = []
