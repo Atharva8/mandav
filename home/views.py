@@ -12,13 +12,13 @@ def index(request):
         feedback = Feedback.objects.create(name=name,email=email,comment=comments)
         feedback.save()    
 
-    feedbacks = list(Feedback.objects.all())
-    try:
-        random_items = random.sample(feedbacks, 3)
-    except IndexError:
-        random_items = []
+    # feedbacks = list(Feedback.objects.all())
+    # try:
+    #     random_items = random.sample(feedbacks, 3)
+    # except IndexError:
+    #     random_items = []
     items = Item.objects.all()
-    return render(request,'home/index.html',context={'items':items,'feedbacks':random_items})
+    return render(request,'home/index.html',context={'items':items})
 
 
 @login_required(login_url='/admin/login/?next=/admin/')

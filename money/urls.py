@@ -24,5 +24,4 @@ urlpatterns = [
     path('', index, name='home'),
     path('dashboard/',dashboard, name='dashboard')
 ]
-if settings.DEBUG: # new
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

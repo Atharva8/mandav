@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+import cloudinary
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django_cleanup.apps.CleanupConfig',
     'django_extensions',
+    'cloudinary'
 ]
 
 MIDDLEWARE = [
@@ -127,7 +129,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
+cloudinary.config( 
+  cloud_name = "dkjhukqwi", 
+  api_key = "358636417921586", 
+  api_secret = "IcvOcDZBkmsRCmW7Ud6N_S_V8II" 
+)

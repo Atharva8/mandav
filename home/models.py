@@ -1,6 +1,7 @@
 from django.db.models.aggregates import Sum
 from django.db import models
 from django.core.exceptions import ValidationError
+from cloudinary.models import CloudinaryField
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
@@ -20,7 +21,7 @@ class Item(models.Model):
     cst = models.PositiveIntegerField(verbose_name='CST(%)')
     gst = models.PositiveIntegerField(verbose_name='GST(%)')
     stock = models.PositiveIntegerField(default=0)
-    image = models.ImageField(upload_to='images/', blank=True)
+    image = CloudinaryField('image')
 
     @property
     def rented(self):

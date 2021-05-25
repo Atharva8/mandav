@@ -1,6 +1,7 @@
-from django.db.models.signals import pre_delete, post_save, pre_save
+from django.db.models.signals import post_delete, pre_delete, post_save, pre_save
 from django.dispatch import receiver
-from home.models import ItemInst, Payment, Order, PaymentDetail
+from home.models import Item, ItemInst, Payment, Order, PaymentDetail
+from cloudinary.api import delete_resources
 
 @receiver(post_save, sender=Order)
 def create_payment(sender, instance, **kwargs):
@@ -103,6 +104,10 @@ def update_order(sender, instance, **kwargs):
     instance.order.grand_total -= instance.total
     instance.order.save()
 
+@receiver(pre_delete, sender=Item)
+def delete_item_image(sender, instance, **kwargs):
+    res = delete_resources([instance.image])
+    print(res)
 
 def print_name(name, value):
     print(f'{name} {value}')
