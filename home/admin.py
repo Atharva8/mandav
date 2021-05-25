@@ -1,24 +1,25 @@
 from django.contrib import admin, messages
 from django.http import response
-from .models import Customer, Feedback, Order, Item, ItemInst, Payment, PaymentDetail, TaxSummary, PaymentSummary, Inventory
+from home.models import *
 from rangefilter.filter import DateRangeFilter
 from django.urls import path
 from django.contrib.auth.models import Group, User
 from django.utils.translation import ngettext
 from home.forms import ItemInstForm, OrderForm
+from django.db.models import Sum
 
 class ItemInstInline(admin.TabularInline):
     form = ItemInstForm
     model = ItemInst
-    readonly_fields = ('price_by_hour','price_by_day', 'duration',
-                       'item_total', 'gst', 'cst', 'total','price')
+    readonly_fields = ('price_by_hour', 'price_by_day', 'duration',
+                       'item_total', 'gst', 'cst', 'total', 'price')
     exclude = ('last_value',)
     extra = 1
 
 
 class OrderAdmin(admin.ModelAdmin):
     form = OrderForm
-    change_list_template = 'admin/order_summary_change_list.html'
+    change_list_template = 'admin/order_summary.html'
     inlines = [
         ItemInstInline,
     ]
@@ -32,35 +33,11 @@ class OrderAdmin(admin.ModelAdmin):
     readonly_fields = ('total', 'gst', 'cst', 'grand_total',
                        'payment_status', 'gst_status')
 
-    def changelist_view(self, request, extra_content=None):
-        response = super().changelist_view(
-            request,
-            extra_content
-        )
-        try:
-            qs = response.context_data['cl'].queryset
-        except (AttributeError, KeyError):
-            return response
-
-        return response
-
 
 class PaymentAdmin(admin.ModelAdmin):
-    change_list_template = 'admin/payment_change_list.html'
+    change_list_template = 'admin/payment_summary.html'
     readonly_fields = ('order', 'remaining', 'cst', 'gst',
                        'status', 'paid', 'order_status')
-
-    def changelist_view(self, request, extra_content=None):
-        response = super().changelist_view(
-            request,
-            extra_content
-        )
-        try:
-            qs = response.context_data['cl'].queryset
-        except (AttributeError, KeyError):
-            return response
-
-        return response
 
 
 def make_gst(modeladmin, request, queryset):
@@ -74,10 +51,9 @@ def make_gst(modeladmin, request, queryset):
 
 make_gst.short_description = "Pay Tax"
 
-#TODO
 
 class TaxSummaryAdmin(admin.ModelAdmin):
-    change_list_template = 'admin/gst_summary_change_list.html'
+    change_list_template = 'admin/tax_summary.html'
     list_filter = (
         ('from_date', DateRangeFilter),
         ('status'),
@@ -87,44 +63,17 @@ class TaxSummaryAdmin(admin.ModelAdmin):
     actions = [make_gst]
 
     def changelist_view(self, request, extra_content=None):
-
         response = super().changelist_view(
             request,
             extra_context=extra_content
         )
-
         try:
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-
-        total_gst = 0
-        total_cst = 0
-        for i in qs:
-            total_gst += i.gst
-            total_cst += i.cst
-
-        gst = []
-        cst = []
-        order_id = []
-        item_total = []
-        gst_status = []
-        customer_name = []
-        grand_total = []
-        for q in qs:
-            gst.append(q.gst)
-            cst.append(q.cst)
-            order_id.append(q.id)
-            item_total.append(q.total)
-            gst_status.append(q.gst_status)
-            customer_name.append(q.customer.name)
-            grand_total.append(q.grand_total)
-
-        response.context_data['details'] = zip(
-            order_id, gst, cst, item_total, gst_status, customer_name, grand_total)
-        response.context_data['gst_total'] = total_gst
-        response.context_data['cst_total'] = total_cst
-        response.context_data
+        
+        response.context_data['total_gst'] = qs.aggregate(Sum('gst'))['gst__sum']
+        response.context_data['total_cst'] = qs.aggregate(Sum('cst'))['cst__sum']
         return response
 
     def has_add_permission(self, request):
@@ -132,7 +81,7 @@ class TaxSummaryAdmin(admin.ModelAdmin):
 
 
 class PaymentSummaryAdmin(admin.ModelAdmin):
-    change_list_template = 'admin/pay_summary_change_list.html'
+    change_list_template = 'admin/invoice.html'
 
     def get_urls(self):
         urls = super().get_urls()
@@ -143,7 +92,6 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
         return my_urls + urls
 
     def changelist_view(self, request, extra_content=None, order=0):
-
         response = super().changelist_view(
             request,
             extra_context=extra_content
@@ -169,37 +117,21 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
 class InventoryAdmin(admin.ModelAdmin):
     fields = ('name', 'stock', 'rented', 'available',)
     readonly_fields = ('name', 'rented', 'available',)
-    change_list_template = 'admin/inventory_change_list.html'
-    def changelist_view(self, request, extra_content=None):
-        response = super().changelist_view(
-            request,
-            extra_content
-        )
-        try:
-            qs = response.context_data['cl'].queryset
-        except (AttributeError, KeyError):
-            return response
-
-        return response
+    change_list_template = 'admin/inventory_summary.html'
 
 
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('name', 'price_by_hour', 'gst', 'cst', 'image','price_by_day')
-
-
-class FeedbackAdmin(admin.ModelAdmin):
-    pass
+    fields = ('name', 'price_by_hour', 'gst', 'cst', 'image', 'price_by_day')
 
 
 PRADNYA_DECORATORS = "Pradnya Decorators"
-admin.site.register(Feedback, FeedbackAdmin)
+admin.site.register(Feedback)
 admin.site.register(TaxSummary, TaxSummaryAdmin)
 admin.site.register(Customer)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(Item, ItemAdmin)
 admin.site.register(ItemInst)
 admin.site.register(Payment, PaymentAdmin)
-# admin.site.register(PaymentDetail)
 admin.site.register(PaymentSummary, PaymentSummaryAdmin)
 admin.site.unregister(Group)
 admin.site.unregister(User)

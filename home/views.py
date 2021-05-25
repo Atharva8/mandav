@@ -15,9 +15,8 @@ def index(request):
     feedbacks = list(Feedback.objects.all())
     try:
         random_items = random.sample(feedbacks, 3)
-    except:
+    except IndexError:
         random_items = []
-    print(random_items)
     items = Item.objects.all()
     return render(request,'home/index.html',context={'items':items,'feedbacks':random_items})
 
@@ -30,14 +29,12 @@ def dashboard(request):
     gst_unpaid = 0
     cst_unpaid = 0
     for payment in Payment.objects.all():
-        if payment.status == 'Completed':
-            if payment.order.gst_status == 'Unpaid':
-                gst_unpaid+=payment.gst
-                cst_unpaid+=payment.cst
+        if payment.status == 'Completed' and payment.order.gst_status == 'Unpaid':
+            gst_unpaid+=payment.gst
+            cst_unpaid+=payment.cst
                 
     pending_payments = 0
     recived_payments = 0
-
     for payment in Payment.objects.all():
         pending_payments+=payment.remaining
         recived_payments+=payment.paid

@@ -1,8 +1,6 @@
 from django.db.models.aggregates import Sum
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.db.models.base import ModelStateFieldsCacheDescriptor
-
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
@@ -126,8 +124,6 @@ class Payment(models.Model):
     amount = models.PositiveIntegerField(
         default=0, blank=True, verbose_name='Amount(₹)')
     cheque_no = models.CharField(max_length=100, blank=True)
-
-# TODO
 
     def clean(self, *args, **kwargs):
         if self.amount > self.remaining:

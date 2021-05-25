@@ -8,9 +8,6 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = '__all__'
 
-    def clean(self):
-        pass
-
 
 class ItemInstForm(forms.ModelForm):
     class Meta:

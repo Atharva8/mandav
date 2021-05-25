@@ -1,8 +1,6 @@
 from django.db.models.signals import pre_delete, post_save, pre_save
 from django.dispatch import receiver
 from home.models import ItemInst, Payment, Order, PaymentDetail
-from django.db.models import Sum
-
 
 @receiver(post_save, sender=Order)
 def create_payment(sender, instance, **kwargs):
