@@ -26,7 +26,7 @@ class Item(models.Model):
     @property
     def rented(self):
         item = ItemInst.objects.filter(item=self.id).exclude(
-            order__status="Fulfilled").aggregate(Sum('quantity'))
+            order__status="Fulfilled").filter(status="Incomplete").aggregate(Sum('quantity'))
         if item['quantity__sum'] is None:
             return 0
 
@@ -34,12 +34,6 @@ class Item(models.Model):
 
     @property
     def available(self):
-        item = ItemInst.objects.filter(item=self.id).exclude(
-            order__status="Fulfilled").aggregate(Sum('quantity'))
-        total_sum = item['quantity__sum']
-        if total_sum is None:
-            total_sum = 0
-
         return self.stock-self.rented
 
     def __str__(self):

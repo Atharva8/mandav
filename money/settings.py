@@ -39,10 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'home.apps.HomeConfig',
-    'rangefilter', 
+    'rangefilter',
     'django.contrib.humanize',
-    'django_cleanup.apps.CleanupConfig',
-    'django_extensions',
     'cloudinary'
 ]
 
@@ -82,8 +80,9 @@ WSGI_APPLICATION = 'money.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', #django.db.backends.postgresql_psycopg2
-        'NAME': os.path.join(BASE_DIR,'mandav'),
+        # django.db.backends.postgresql_psycopg2
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'mandav'),
         # 'USER':'firefly',
         # 'PASSWORD':'newpass1',
         # 'HOST':'localhost',
@@ -131,8 +130,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-cloudinary.config( 
-  cloud_name = "dkjhukqwi", 
-  api_key = "358636417921586", 
-  api_secret = "IcvOcDZBkmsRCmW7Ud6N_S_V8II" 
+cloudinary.config(
+    cloud_name="dkjhukqwi",
+    api_key="358636417921586",
+    api_secret="IcvOcDZBkmsRCmW7Ud6N_S_V8II"
 )

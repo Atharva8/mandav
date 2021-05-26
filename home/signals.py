@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from home.models import Item, ItemInst, Payment, Order, PaymentDetail
 from cloudinary.api import delete_resources
 
+
 @receiver(post_save, sender=Order)
 def create_payment(sender, instance, **kwargs):
     if sender == Order:
@@ -48,9 +49,7 @@ def set_paid_zero(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=ItemInst)
 def iteminst_update_fields(sender, instance, **kwargs):
-    print(f'[Item GST]{instance.item.gst}')
-    print(f'[ItemInst Price]{instance.price}')
-    print(f'[Order]{instance.order}')
+    "Item Instance Calculation"
     # Calculate Price
     price = instance.item.price_by_hour if instance.by_hour else instance.item.price_by_day
     instance.price = iteminst_calculate_price(price, instance.quantity)
@@ -67,15 +66,26 @@ def iteminst_update_fields(sender, instance, **kwargs):
     instance.total = calculate_grand_total(
         instance.item_total, instance.cst, instance.gst)
 
-    instance.order.gst += instance.gst
-    instance.order.cst += instance.cst
-    instance.order.total += instance.item_total
-    instance.order.grand_total += instance.total
-    instance.order.save()
+    "Order Updates"
+    #Check if item instance already exists
+    #If it does, calculate difference between the current values and 
+    #existing values and add that to the order
+    if instance.id:
+        item = ItemInst.objects.get(id=instance.id)
+        instance.order.gst += instance.gst-item.gst
+        instance.order.cst += instance.cst-item.cst
+        instance.order.total += instance.item_total-item.item_total
+        instance.order.grand_total += instance.total-item.total
+        instance.order.save()
+    else:
+        instance.order.gst += instance.gst
+        instance.order.cst += instance.cst
+        instance.order.total += instance.item_total
+        instance.order.grand_total += instance.total
+        instance.order.save()
+
 
 # Item Inst Helper Functions
-
-
 def iteminst_calculate_price(price, quantity):
     return abs(price*quantity)
 
@@ -104,10 +114,11 @@ def update_order(sender, instance, **kwargs):
     instance.order.grand_total -= instance.total
     instance.order.save()
 
+
 @receiver(pre_delete, sender=Item)
 def delete_item_image(sender, instance, **kwargs):
     res = delete_resources([instance.image])
     print(res)
 
-def print_name(name, value):
-    print(f'{name} {value}')
+
+

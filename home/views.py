@@ -12,20 +12,12 @@ def index(request):
         feedback = Feedback.objects.create(name=name,email=email,comment=comments)
         feedback.save()    
 
-    # feedbacks = list(Feedback.objects.all())
-    # try:
-    #     random_items = random.sample(feedbacks, 3)
-    # except IndexError:
-    #     random_items = []
-    items = Item.objects.all()
-    return render(request,'home/index.html',context={'items':items})
+    return render(request,'home/index.html',context={'items':Item.objects.all()})
 
 
 @login_required(login_url='/admin/login/?next=/admin/')
 def dashboard(request):
     
-    total_customers = Customer.objects.count()
-    total_orders = Order.objects.count()
     gst_unpaid = 0
     cst_unpaid = 0
     for payment in Payment.objects.all():
@@ -59,8 +51,8 @@ def dashboard(request):
 
     inventory = Inventory.objects.all()
     context={
-        'total_customers':total_customers,
-        'total_orders':total_orders,
+        'total_customers':Customer.objects.count(),
+        'total_orders':Order.objects.count(),
         'gst_unpaid':gst_unpaid,
         'cst_unpaid':cst_unpaid,
         'todays_orders':todays_orders,
