@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+import cloudinary
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,11 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home',
-    'rangefilter', 
+    'home.apps.HomeConfig',
+    'rangefilter',
     'django.contrib.humanize',
-    'django_cleanup.apps.CleanupConfig',
-    'django_extensions',
+    'cloudinary'
 ]
 
 MIDDLEWARE = [
@@ -80,8 +80,9 @@ WSGI_APPLICATION = 'money.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', #django.db.backends.postgresql_psycopg2
-        'NAME': 'mandav',
+        # django.db.backends.postgresql_psycopg2
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'mandav'),
         # 'USER':'firefly',
         # 'PASSWORD':'newpass1',
         # 'HOST':'localhost',
@@ -127,13 +128,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
-BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Kolkata'
+cloudinary.config(
+    cloud_name="dkjhukqwi",
+    api_key="358636417921586",
+    api_secret="IcvOcDZBkmsRCmW7Ud6N_S_V8II"
+)

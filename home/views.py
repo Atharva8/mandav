@@ -1,5 +1,3 @@
-from django.db.models.aggregates import Count, Sum
-from django.http.response import HttpResponse
 from django.shortcuts import render
 from home.models import Inventory, Item,Customer,Order, Payment, Feedback
 from django.contrib.auth.decorators import login_required
@@ -14,36 +12,24 @@ def index(request):
         feedback = Feedback.objects.create(name=name,email=email,comment=comments)
         feedback.save()    
 
-    feedbacks = list(Feedback.objects.all())
-    try:
-        random_items = random.sample(feedbacks, 3)
-    except:
-        random_items = []
-    print(random_items)
-    items = Item.objects.all()
-    return render(request,'home/index.html',context={'items':items,'feedbacks':random_items})
+    return render(request,'home/index.html',context={'items':Item.objects.all()})
+
 
 @login_required(login_url='/admin/login/?next=/admin/')
 def dashboard(request):
     
-    total_customers = Customer.objects.count()
-    total_orders = Order.objects.count()
     gst_unpaid = 0
     cst_unpaid = 0
     for payment in Payment.objects.all():
-        if payment.status == 'Completed':
-            if payment.order.gst_status == 'Unpaid':
-                gst_unpaid+=payment.gst
-                cst_unpaid+=payment.cst
+        if payment.status == 'Completed' and payment.order.gst_status == 'Unpaid':
+            gst_unpaid+=payment.gst
+            cst_unpaid+=payment.cst
                 
     pending_payments = 0
     recived_payments = 0
-
     for payment in Payment.objects.all():
         pending_payments+=payment.remaining
         recived_payments+=payment.paid
-    print(pending_payments)
-    print(recived_payments)
             
     dt = datetime.date.today()
     upcoming_orders = []
@@ -65,8 +51,8 @@ def dashboard(request):
 
     inventory = Inventory.objects.all()
     context={
-        'total_customers':total_customers,
-        'total_orders':total_orders,
+        'total_customers':Customer.objects.count(),
+        'total_orders':Order.objects.count(),
         'gst_unpaid':gst_unpaid,
         'cst_unpaid':cst_unpaid,
         'todays_orders':todays_orders,
