@@ -4,6 +4,10 @@ import datetime
 from home.inventory import convert_utc
 import pytz
 from django.utils import timezone
+import logging
+import time
+
+logger = logging.getLogger('inventory')
 
 class Command(BaseCommand):
     help = 'Monitors and Updates Inventory'
@@ -24,20 +28,23 @@ class Command(BaseCommand):
 
     def monitor_day(self):
         items = ItemInst.objects.exclude(order__status="Fulfilled").filter(status="Incomplete").filter(by_hour=False).all()
-        print(items)
+        count=0
         for item in items:
             if datetime.datetime.today().date() > item.till_date.date():
                 item.status = 'Complete'
                 item.save()
+                count+=1
+        logger.info('Marked [%s] ItemInst as Complete',count)
                 
 
     
     def monitor_hour(self):
         items = ItemInst.objects.exclude(order__status="Fulfilled").filter(status="Incomplete").filter(by_hour=True).all()
-        print(items)
         current = timezone.make_aware(convert_utc(datetime.datetime.now()),tzinfo=pytz.utc)
+        count=0
         for item in items:
             if current > item.till_date:
                 item.status = 'Complete'
                 item.save()
-
+                count+=1
+        logger.info('Marked [%s] ItemInst as Complete',count)

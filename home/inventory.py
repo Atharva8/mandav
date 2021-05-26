@@ -5,6 +5,11 @@ import pytz
 import datetime
 from django.utils import timezone
 from home.models import Item, ItemInst
+import logging
+import time
+
+logger = logging.getLogger('inventory')
+
 
 def check_dates(order_from_date, order_till_date, item_date):
     return order_from_date <= item_date <= order_till_date
@@ -44,11 +49,16 @@ def inventory_by_hour(item_inst):
     item = Item.objects.get(id=item_id)
 
     if item.stock < item_inst['quantity']:
+        logger.error('Item greater than in stock')
         raise ValidationError('Item greater than in stock')
 
     if item.available < item_inst['quantity']:
+        start_time = time.time()
         total = ItemInst.objects.filter(till_date__date=from_date.date(), by_hour=True).exclude(
             id=item_id).filter(till_date__lte=from_date).aggregate(Sum('quantity'))['quantity__sum']
+        delta = time.time()-start_time
+        logger.info('Finished ItemInst query in [%s]', delta)
+
         if total == None:
             total = 0
         if item_inst['id'] == None:
@@ -57,7 +67,9 @@ def inventory_by_hour(item_inst):
             existing_qty = ItemInst.objects.get(id=item_inst['id'].id).quantity
 
         if total+item.available < item_inst['quantity']-existing_qty:
-            raise ValidationError('Item greater than available')
+            logger.error(
+                'Item greater than available [%s]', item_inst['quantity']-existing_qty)
+            raise ValidationError('Item greater than available', code=101)
 
 
 "Item Inventory Check for by_day implementation"
@@ -66,15 +78,20 @@ def inventory_by_hour(item_inst):
 def inventory_by_day(item_inst):
     from_date = timezone.make_aware(convert_utc(
         item_inst['from_date']), timezone=pytz.utc)
+    start_time = time.time()
     total = ItemInst.objects.filter(till_date__lt=from_date).aggregate(
         Sum('quantity'))['quantity__sum']
+    delta = time.time()-start_time
+    logger.info('Finished ItemInst query in [%s]', delta)
     item = Item.objects.get(id=item_inst['item'].id)
     if item_inst['id'] == None:
         existing_qty = 0
     else:
         existing_qty = ItemInst.objects.get(id=item_inst['id'].id).quantity
     if total is None:
-        total=0
+        total = 0
 
     if total+item.available < item_inst['quantity']-existing_qty:
-        raise ValidationError('Item greater than available')
+        logger.error(
+            'Item greater than available [%s]', item_inst['quantity']-existing_qty)
+        raise ValidationError('Item greater than available', code=101)
