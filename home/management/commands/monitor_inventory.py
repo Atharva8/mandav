@@ -27,7 +27,10 @@ class Command(BaseCommand):
             self.monitor_day()
 
     def monitor_day(self):
+        start_time=time.time()
         items = ItemInst.objects.exclude(order__status="Fulfilled").filter(status="Incomplete").filter(by_hour=False).all()
+        delta=time.time()-start_time
+        logger.info('Finished ItemInst query in [%s]', delta)
         count=0
         for item in items:
             if datetime.datetime.today().date() > item.till_date.date():
@@ -39,7 +42,10 @@ class Command(BaseCommand):
 
     
     def monitor_hour(self):
+        start_time=time.time()
         items = ItemInst.objects.exclude(order__status="Fulfilled").filter(status="Incomplete").filter(by_hour=True).all()
+        delta=time.time()-start_time
+        logger.info('Finished ItemInst query in [%s]', delta)
         current = timezone.make_aware(convert_utc(datetime.datetime.now()),tzinfo=pytz.utc)
         count=0
         for item in items:
