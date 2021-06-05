@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 import cloudinary
+import logging
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,3 +136,40 @@ cloudinary.config(
     api_key="358636417921586",
     api_secret="IcvOcDZBkmsRCmW7Ud6N_S_V8II"
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'simple': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        }
+    },
+    'handlers': {
+        'model_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/model.log',
+            'formatter': 'simple'
+        },
+        'inventory_handler': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/inventory.log',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'models': {
+            'handlers': ['model_handler'],
+            'level': 'INFO',
+            'propagate': True
+        },
+        'inventory': {
+            'handlers': ['inventory_handler'],
+            'level': 'INFO',
+            'propagate': True
+        }
+    }
+}

@@ -2,7 +2,7 @@ from django.db.models.signals import post_delete, pre_delete, post_save, pre_sav
 from django.dispatch import receiver
 from home.models import Item, ItemInst, Payment, Order, PaymentDetail
 from cloudinary.api import delete_resources
-
+import time
 
 @receiver(post_save, sender=Order)
 def create_payment(sender, instance, **kwargs):
@@ -13,6 +13,7 @@ def create_payment(sender, instance, **kwargs):
             payment = Payment.objects.create(
                 order=instance, date=instance.from_date)
             payment.save()
+            
 
 
 @receiver([pre_save], sender=ItemInst)
@@ -24,7 +25,7 @@ def set_duration(sender, instance, **kwargs):
         delta = instance.till_date-instance.from_date
         delta = abs(delta.days)+1
     instance.duration = delta
-
+    
 
 @receiver([pre_save], sender=Payment)
 def set_paid_zero(sender, instance, **kwargs):
@@ -42,8 +43,7 @@ def set_paid_zero(sender, instance, **kwargs):
 
         instance.cheque_no = ''
         instance.amount = 0
-
-
+        
 "This function updates ItemInst's GST, CST, Total and Price fields"
 
 
@@ -83,7 +83,7 @@ def iteminst_update_fields(sender, instance, **kwargs):
         instance.order.total += instance.item_total
         instance.order.grand_total += instance.total
         instance.order.save()
-
+    
 
 # Item Inst Helper Functions
 def iteminst_calculate_price(price, quantity):
@@ -108,6 +108,7 @@ def calculate_grand_total(item_total, cst, gst):
 
 @receiver(pre_delete, sender=ItemInst)
 def update_order(sender, instance, **kwargs):
+    
     instance.order.gst -= instance.gst
     instance.order.cst -= instance.cst
     instance.order.total -= instance.item_total
@@ -118,7 +119,7 @@ def update_order(sender, instance, **kwargs):
 @receiver(pre_delete, sender=Item)
 def delete_item_image(sender, instance, **kwargs):
     res = delete_resources([instance.image])
-    print(res)
+    
 
 
 
