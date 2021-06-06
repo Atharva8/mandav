@@ -1,13 +1,18 @@
+import datetime
 from django.db.models.aggregates import Sum
 from django.db import models
 from django.core.exceptions import ValidationError
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
+
+def get_default_time():
+    default_time = datetime.datetime.combine(datetime.datetime.now().date(),datetime.time())
+    return timezone.make_aware(default_time)
 
 class Customer(models.Model):
     name = models.CharField(max_length=30)
     address = models.TextField()
     phone = models.BigIntegerField()
-
     def __str__(self):
         return self.name
 
@@ -25,8 +30,9 @@ class Item(models.Model):
 
     @property
     def rented(self):
+        current_time = timezone.make_aware(datetime.datetime.now())
         item = ItemInst.objects.filter(item=self.id).exclude(
-            order__status="Fulfilled").filter(status="Incomplete").aggregate(Sum('quantity'))
+            order__status="Fulfilled").filter(from_date__lte=current_time,till_date__gte=current_time).aggregate(Sum('quantity'))
         if item['quantity__sum'] is None:
             return 0
 
@@ -66,26 +72,35 @@ class Order(models.Model):
     gst_status = models.CharField(
         max_length=10, default='Unpaid', choices=GST_STATUS)
     total = models.FloatField(default=0)
+    discount = models.PositiveIntegerField(default=5,verbose_name='Discount(%)')
     gst = models.FloatField(default=0)
     cst = models.FloatField(default=0)
-    grand_total = models.FloatField(default=0)
 
     def __str__(self):
         return f'Order#{self.id} {self.customer.name}'
 
+    @property
+    def calculated_discount(self):
+        if self.total != 0:
+            return calculate_discount(self.discount,self.total)
+        return 0
+
+    @property
+    def grand_total(self):
+        return self.total-self.calculated_discount+self.gst+self.cst
 
 class ItemInst(models.Model):
     ITEM_STATUS = (
         ('Incomplete', 'Incomplete'),
         ('Complete', 'Complete'),
     )
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.RESTRICT)
     quantity = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     last_value = models.IntegerField(default=0)
     by_hour = models.BooleanField(default=False)
-    from_date = models.DateTimeField()
-    till_date = models.DateTimeField()
+    from_date = models.DateTimeField(default=get_default_time())
+    till_date = models.DateTimeField(default=get_default_time())
     duration = models.PositiveIntegerField(default=0)
     status = models.CharField(
         max_length=15, default='Incomplete', choices=ITEM_STATUS)
@@ -214,3 +229,6 @@ class Inventory(Item):
 def calculate_tax(tax_percent, total):
     tax = abs((tax_percent/100)*total)
     return tax
+
+def calculate_discount(discount_percent,total):
+    return (discount_percent/total*100)

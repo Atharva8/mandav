@@ -1,7 +1,7 @@
 from django import forms
-from home.models import ItemInst, Order
 from django.core.exceptions import ValidationError
-from home.inventory import check_dates, check_inventory, check_time, equal_dates
+from home.models import ItemInst, Order
+from home.validation import CheckInventory, ValidateItemInst
 
 class OrderForm(forms.ModelForm):
     class Meta:
@@ -15,26 +15,22 @@ class ItemInstForm(forms.ModelForm):
         fields = '__all__'
 
     def clean(self):
-        item = self.cleaned_data
-        order_fromdate = item['order'].from_date
-        order_tilldate = item['order'].till_date
+        cleaned_data = self.cleaned_data
+        checkinventory = CheckInventory(iteminstance=cleaned_data)
+        validate_iteminst = ValidateItemInst(instance=cleaned_data)
 
-        """Check if item date is in the range of order date"""
-        if not (check_dates(order_fromdate, order_tilldate, item["from_date"].date()) and check_dates(order_fromdate, order_tilldate, item["till_date"].date())):
-            raise ValidationError(message="Check your dates")
+        if not checkinventory.check_available():
+            raise ValidationError('Item not available in inventory')
 
-        "Check if item quantity in inventory"
-        check_inventory(item)
+        if validate_iteminst.check_tilldate_smaller_than_fromdate():
+            raise ValidationError('Till date smaller than From date.')
 
-        """Check Equal Dates"""
-        if not(equal_dates(item['from_date'], item['till_date'])) and item['by_hour'] == True:
-            raise ValidationError(message='Dates are not equal')
+        if validate_iteminst.by_hour:
+            if not validate_iteminst.check_equal_dates():
+                raise ValidationError('From date and Till date are not equal.')
+                
+            if not validate_iteminst.check_min_hour():
+                raise ValidationError('Duration Must be Minimum a hour.')
 
-        """Duration Checking(Min 1 hr)"""
-        if not(check_time(item['from_date'], item['till_date'])) and item['by_hour'] == True:
-            raise ValidationError(message='Duration must be atleast one hour.')
-
-
-
-
-
+        if not validate_iteminst.check_in_order_range():
+            raise ValidationError('From Date and Till Date not in range of Order')

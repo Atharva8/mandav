@@ -1,5 +1,8 @@
 from django.contrib import admin, messages
+from django.core.checks.messages import  ERROR
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import response
+from django.shortcuts import redirect
 from home.models import *
 from rangefilter.filter import DateRangeFilter
 from django.urls import path
@@ -26,12 +29,12 @@ class OrderAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("", {
-            'fields': ('customer', ('from_date', 'till_date'), 'total', 'gst', 'cst', 'grand_total', 'status', 'payment_status', 'gst_status')
+            'fields': ('customer', ('from_date', 'till_date'), 'total', 'discount','calculated_discount','gst', 'cst', 'grand_total', 'status', 'payment_status', 'gst_status')
         }),
     )
 
     readonly_fields = ('total', 'gst', 'cst', 'grand_total',
-                       'payment_status', 'gst_status')
+                       'payment_status', 'gst_status','calculated_discount')
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -100,8 +103,15 @@ class PaymentSummaryAdmin(admin.ModelAdmin):
             qs = response.context_data['cl'].queryset
         except (AttributeError, KeyError):
             return response
-
-        order = Order.objects.get(id=order)
+        
+        response.context_data['title'] = 'Invoice'
+        try:
+            order = Order.objects.get(id=order)
+        except Order.DoesNotExist:
+            messages.add_message(request=request,level=ERROR,message='Next order does not exist')
+            
+            return redirect('/admin/home/taxsummary/')
+        
         response.context_data['payments'] = qs.get(
             order=order).paymentdetail_set.all()
         response.context_data['order'] = order
@@ -121,7 +131,7 @@ class InventoryAdmin(admin.ModelAdmin):
 
 
 class ItemAdmin(admin.ModelAdmin):
-    fields = ('name', 'price_by_hour', 'gst', 'cst', 'image', 'price_by_day')
+    fields = ('name', 'price_by_hour', 'price_by_day','gst', 'cst', 'image', )
 
 
 PRADNYA_DECORATORS = "Pradnya Decorators"

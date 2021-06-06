@@ -84,6 +84,7 @@ DATABASES = {
         # django.db.backends.postgresql_psycopg2
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'mandav'),
+        'TIMEZONE':'Asia/Kolkata'
         # 'USER':'firefly',
         # 'PASSWORD':'newpass1',
         # 'HOST':'localhost',

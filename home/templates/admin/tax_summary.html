@@ -19,7 +19,7 @@
     <tbody>
         {%for order in cl.queryset%}
         <tr>
-            <td><a href="/admin/home/paymentsummary/paysummary/{{order_id}}">Order#{{order.id}} {{order.name}}</a></td>
+            <td><a href="/admin/home/paymentsummary/paysummary/{{order.id}}">Order#{{order.id}} {{order.name}}</a></td>
             <td>{{order.total | floatformat:2}}</td>
             <td>{{order.gst | floatformat:2}}</td>
             <td>{{order.cst | floatformat:2}}</td>

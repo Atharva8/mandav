@@ -1,6 +1,15 @@
 {% extends "admin/change_list.html" %}
 {% block result_list %}
 {% load humanize %}
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+<a href="/admin/home/paymentsummary/paysummary/{{order.id|add:"1"}}" style="float:right">Next Order</a>
+<br>
 <div>
     <p style="background-color: #79aec8;padding-top: 8px;color: rgb(255, 255, 255);">Order Details</p>
     <table>
@@ -17,13 +26,13 @@
                 <td>Order#{{order.id}} {{order.customer.name}}</td>
                 <td>{{order.customer.name}}</td>
                 <td><span>&#8377;</span>
-                    {{order.total | intcomma}}</td>
+                    {{order.total | floatformat:2}}</td>
                 <td><span>&#8377;</span>
-                    {{order.gst | intcomma}}</td>
+                    {{order.gst | floatformat:2}}</td>
                 <td><span>&#8377;</span>
-                    {{order.cst | intcomma}}</td>
+                    {{order.cst | floatformat:2}}</td>
                 <td><span>&#8377;</span>
-                    {{order.grand_total | intcomma}}</td>
+                    {{order.grand_total | floatformat:2}}</td>
             </tr>
         </tbody>
     </table>
